@@ -1,0 +1,63 @@
+1.Write query to find the root node.
+SELECT
+    id, title
+FROM
+    structure
+WHERE
+    parent_id IS NULL;
+2.Write query to find the leaf node.
+SELECT
+    s1.id, s1.title
+FROM
+    structure s1
+        LEFT JOIN
+    sructure s2 ON s2.parent_id = s1.id
+WHERE
+    s2.id IS NULL;
+
+3.Write query to find the non-leaf node.
+SELECT
+   DISTINCT( s1.id), s1.title
+FROM
+    structure s1
+        INNER JOIN
+    structure s2 ON s2.parent_id = s1.id
+WHERE
+    s2.id IS NOT NULL
+4.Write query to find the path of each node.
+WITH RECURSIVE structure_path (id, title, path) AS
+(
+  SELECT id, title, title as path
+    FROM structure
+    WHERE parent_id IS NULL
+  UNION ALL
+  SELECT s.id, s.title, CONCAT(sp.path, ' > ', s.title)
+    FROM structure_path AS sp JOIN structure AS s
+      ON sp.id = s.parent_id
+)
+SELECT * FROM structure_path
+ORDER BY path;
+5.Write a function to calculate node level.
+WITH RECURSIVE structure_path (id, title, lvl) AS
+(
+  SELECT id, title, 0 lvl
+    FROM structure
+    WHERE parent_id IS NULL
+  UNION ALL
+  SELECT s.id, s.title,sp.lvl + 1
+    FROM structure_path AS sp JOIN structure AS s
+      ON sp.id = s.parent_id
+)
+SELECT * FROM structure_path
+ORDER BY lvl;
+6.Write a procedure to find the immediate child.
+
+DROP PROCEDURE `i_child`;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `i_child`(IN `uid` INT) NOT DETERMINISTIC NO SQL SQL SECURITY DEFINER SELECT
+    id, title
+FROM
+    structure
+WHERE
+    parent_id = uid
+
+CALL i_child('1')
